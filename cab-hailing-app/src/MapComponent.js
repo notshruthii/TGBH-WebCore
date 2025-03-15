@@ -1,64 +1,72 @@
 import React, { useEffect, useState } from "react";
-import { MapContainer, TileLayer, useMap } from "react-leaflet";
+import { MapContainer, TileLayer, useMap, Popup, Marker } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import "leaflet.heat";
 
+const center = [12.9716, 77.5946]; // MG Road, Bangalore
+
+const randomPoints = (count) => {
+  let points = [];
+  for (let i = 0; i < count; i++) {
+    let lat = 12.91 + Math.random() * 0.1; // Random lat around MG Road - Koramangala
+    let lng = 77.57 + Math.random() * 0.1; // Random lng around MG Road - Koramangala
+    let intensity = Math.random() * 2; // Random intensity between 0-2
+    points.push([lat, lng, intensity]);
+  }
+  return points;
+};
+
 const HeatmapLayer = ({ points }) => {
   const map = useMap();
-
   useEffect(() => {
-    if (!map || !points.length) return;
-
-    const heatLayer = L.heatLayer(points, {
-      radius: 25,
-      blur: 15,
-      maxZoom: 17,
-      gradient: {
-        0.1: "green",
-        0.3: "yellow",
-        0.6: "orange",
-        0.9: "red",
-      },
-    }).addTo(map);
-
-    return () => {
-      map.removeLayer(heatLayer);
-    };
-  }, [map, points]);
-
+    const heatLayer = L.heatLayer(points, { radius: 25, blur: 15, maxZoom: 17 }).addTo(map);
+    return () => map.removeLayer(heatLayer);
+  }, [points, map]);
   return null;
 };
 
 const MapComponent = () => {
-  const [heatmapData, setHeatmapData] = useState([]);
+  const [data, setData] = useState(randomPoints(50)); // 50 random points
+  const [rewards, setRewards] = useState([]);
 
   useEffect(() => {
-    // Generate random heatmap data focused on MG Road to Koramangala
-    const generateRandomPoints = (numPoints) => {
-      const minLat = 12.935; // Koramangala
-      const maxLat = 12.974; // MG Road
-      const minLng = 77.610;
-      const maxLng = 77.624;
-
-      let points = [];
-      for (let i = 0; i < numPoints; i++) {
-        const lat = Math.random() * (maxLat - minLat) + minLat;
-        const lng = Math.random() * (maxLng - minLng) + minLng;
-        const intensity = Math.random(); // Value between 0 and 1 for heat level
-        points.push([lat, lng, intensity]);
-      }
-      return points;
-    };
-
-    setHeatmapData(generateRandomPoints(100)); // Adjust number of points
-  }, []);
+    const highDensityAreas = data.filter((point) => point[2] > 1.5); // Filter high-density areas
+    setRewards(
+      highDensityAreas.map((point) => ({
+        lat: point[0],
+        lng: point[1],
+        reward: Math.random() > 0.5 ? "₹50 Cash Reward" : "Petrol Reimbursement",
+      }))
+    );
+  }, [data]);
 
   return (
-    <MapContainer center={[12.950, 77.617]} zoom={14} style={{ height: "100vh", width: "100%" }}>
-      <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-      <HeatmapLayer points={heatmapData} />
-    </MapContainer>
+    <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
+      <div style={{ height: "50%", width: "100%",paddingLeft:20  }}>
+        <MapContainer center={center} zoom={14} style={{ height: "100%", width: "100%" }}>
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+          <HeatmapLayer points={data} />
+          {rewards.map((reward, index) => (
+            <Marker key={index} position={[reward.lat, reward.lng]}>
+              <Popup>{reward.reward}</Popup>
+            </Marker>
+          ))}
+        </MapContainer>
+      </div>
+      <div
+        style={{
+          height: "50%",
+          width: "100%",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          backgroundColor: "#f8f8f8",
+        }}
+      >
+        <h2>Ride Info & Controls</h2>
+      </div>
+    </div>
   );
 };
 
