@@ -43,7 +43,7 @@ const MapComponent = () => {
 
   return (
     <div style={{ height: "100vh", display: "flex", flexDirection: "column" }}>
-      <div style={{ height: "50%", width: "100%",paddingLeft:20  }}>
+      <div style={{ flex:1, width: "100%"  }}>
         <MapContainer center={center} zoom={14} style={{ height: "100%", width: "100%" }}>
           <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
           <HeatmapLayer points={data} />
@@ -64,7 +64,7 @@ const MapComponent = () => {
           backgroundColor: "#f8f8f8",
         }}
       >
-        <h2>Ride Info & Controls</h2>
+        
       </div>
     </div>
   );
